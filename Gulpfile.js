@@ -1,4 +1,7 @@
 var gulp = require('gulp'),
+  minifyInline = require('gulp-minify-inline-scripts'),
+  nunjucksRender = require('gulp-nunjucks-render'),
+  inlinesource = require('gulp-inline-source'),
   uglify = require('gulp-uglify'),
   concat = require('gulp-concat'),
   notify = require("gulp-notify"),
@@ -7,6 +10,31 @@ var gulp = require('gulp'),
   minifycss = require('gulp-minify-css'),
   del = require('del'),
   browserSync = require('browser-sync').create();
+
+
+gulp.task('inlinesource-prepare', function () {
+    return gulp.src(['all-in-html/**', 'bower_components/**', 'src/**'])
+        .pipe(gulp.dest('./inline'));
+});
+
+gulp.task('inlinesource', ['minifyinline'], function () {
+    return gulp.src('./inline/*.html', { base: './inline' }) 
+	.pipe(inlinesource())
+	.pipe(gulp.dest('./inline'));
+});
+
+gulp.task('minifyinline', ['nunjucks'], function () {
+    return gulp.src('./inline/*.html', { base: './inline' }) 
+	.pipe(minifyInline())
+	.pipe(gulp.dest('./inline'));
+});
+
+gulp.task('nunjucks', ['inlinesource-prepare'], function() {
+  nunjucksRender.nunjucks.configure(['./inline/'], {watch: false});
+  return gulp.src('inline/**')
+  	.pipe(nunjucksRender())
+  	.pipe(gulp.dest('./inline'))
+});
 
 gulp.task('clean', function() {
   del(['dist'])
